@@ -54,3 +54,4 @@ __pycache__
 .err
 .out
 *.rq
+logs/*

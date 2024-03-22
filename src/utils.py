@@ -132,7 +132,7 @@ def load_by_query(query):
 def query_db(queries, sep):
     """Queries the database with a SPARQL query that returns a graph (ie uses a CONSTRUCT clause)."""
     # Set up the SPARQL endpoint
-    sparql = SPARQLWrapper("http://cedre-14a.med.univ-rennes1.fr:3030/WS287-rdf/sparql") #TODO: make this endpoint default, but allow other endpoint in arguments
+    sparql = SPARQLWrapper("http://cedre-14a.med.univ-rennes1.fr:3030/WS287-rdf-coexp0.8/sparql") #TODO: make this endpoint default, but allow other endpoint in arguments
     warnings.filterwarnings("ignore")
     for query in tqdm(queries, desc="Querying SPARQL endpoint..."):
 
