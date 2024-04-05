@@ -46,7 +46,7 @@ def data_extractor(file:str) -> dict:
             elif 'keywords :' in line:
                 keys = line.split(':')[-1].strip()
                 if keys != 'None':
-                    keywords = line.split(' ').strip()
+                    keywords = line.split(' ')
                     if 'onto' in keywords:
                         ontologies = True
                     else:
