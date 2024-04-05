@@ -2,6 +2,7 @@
 import argparse
 import os
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
 def data_extractor(file:str) -> dict:
     """Extracts information from log file"""
@@ -12,13 +13,20 @@ def data_extractor(file:str) -> dict:
     embedding_stats= list()
     train_loss = list()
     valid_loss = list()
+    # start_time = datetime.date()
+    # phase1_end = datetime.date()
+    # phase2_end = datetime.date()
 
     pattern = " - Epoch "
 
     with open(file, 'r') as f:
         for line in f:
             if 'Start time:' in line:
-                start_time = line.split(':')[-1].strip()
+                start_time = datetime.strptime(line.split('INFO:')[0].split(',')[0].strip(), '%Y-%m-%d %H:%M:%S')
+            elif 'Training of Embedding Model done' in line:
+                phase1_end = datetime.strptime(line.split('INFO:')[0].split(',')[0].strip(), '%Y-%m-%d %H:%M:%S')
+            elif 'Classifier trained' in line:
+                phase2_end = datetime.strptime(line.split('INFO:')[0].split(',')[0].strip(), '%Y-%m-%d %H:%M:%S')
             elif 'Number of entities' in line:
                 entities = int(line.split(':')[-1].strip())
                 if nodes == 0:
@@ -59,6 +67,10 @@ def data_extractor(file:str) -> dict:
                     keywords = False
                     structure = 'Unknown'
                     ontologies = 'Unknown'
+    
+    training_length = phase2_end - start_time
+    phase1_length = phase1_end - start_time
+    phase2_length = phase2_end - phase1_end
 
     for element in embedding_stats:
         stats = element.split('|')[1]
@@ -67,7 +79,10 @@ def data_extractor(file:str) -> dict:
     
     best_epoch = valid_loss.index(min(valid_loss)) +1
 
-    data = {'start': start_time,
+    data = {'filename':file,
+            'total_length': training_length,
+            'embedding_length': phase1_length,
+            'classifier_length': phase2_length,
             'nodes':nodes,
             'relation_types':relation_types,
             'triples':triples,
@@ -82,12 +97,20 @@ def data_extractor(file:str) -> dict:
             'epochs':epochs,
             'best_epoch':best_epoch,
             }
+    
     return data
 
-def figure(file:str, hit1:float, batch:int, train_loss:list, valid_loss:list, best_epoch:int) -> None:
+def figure(data) -> None:
     """
     Generates a train/validation graph and saves it as file.png
     """
+    file = data['filename']
+    hit1= data['hit@1']
+    batch = data['batch_size']
+    train_loss = data['train_loss']
+    valid_loss = data['valid_loss']
+    best_epoch = data['best_epoch']
+    training_time = data['total_length']
 
     #train line
     xt = list(range(1, len(train_loss)+1, 1))
@@ -102,13 +125,17 @@ def figure(file:str, hit1:float, batch:int, train_loss:list, valid_loss:list, be
     plt.text(0.5, 0.8,'Batch_size = ' + str(batch), transform = ax.transAxes) #horizontalalignment='center', verticalalignment='center', transform = ax.transAxes
     #plot Hit @1 value
     plt.text(0.5, 0.75, 'Hit@1 = ' + str(hit1), transform = ax.transAxes)
-    #plot best validation epoch
+    #plot line at best validation epoch
     plt.axvline(x = best_epoch, color = 'red')
+    plt.text(0.5, 0.7, 'Best_epoch = ' + str(best_epoch), transform = ax.transAxes)
+    #plt time taken for training
+    plt.text(0.5, 0.65, 'Training time = ' + str(training_time), transform = ax.transAxes)
     plt.xlabel('epochs')
     plt.ylabel('loss')
     plt.title(file)
     plt.legend()
     plt.savefig(file + '.png')
+
 
 def main():
     """
@@ -124,8 +151,10 @@ def main():
     logfile = args.file
     if not os.path.isfile(logfile + '.png'):
         data = data_extractor(logfile)
-        figure(logfile, data['hit@1'], data['batch_size'], data['train_loss'], data['valid_loss'], data['best_epoch'])
-        print(data['best_epoch'])
+        figure(data)
 
 if __name__ == "__main__":
     main()
+
+    ## TODO: IMPROVE DATA USAGE and INFOS DISPLAY ON GRAPH
+    ## notably training length
