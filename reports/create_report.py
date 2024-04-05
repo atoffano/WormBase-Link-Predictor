@@ -19,7 +19,7 @@ def figure(file):
             if pattern in line:
                 embedding_stats.append(line.strip())
             elif "Hit@1 :" in line:
-                hit_at_1 = line.split('INFO:')[-1]
+                hit_at_1 = line.split('INFO:')[-1].strip()
             elif "batch_size : " in line:
                 batch_size = line.split(':')[-1].strip()
 
@@ -27,22 +27,23 @@ def figure(file):
     valid_loss = list()
 
     for element in embedding_stats:
-        stats = element.split('|')[3]
+        stats = element.split('|')[1]
         train_loss.append(float(stats.split(' ')[3].strip(',')))
         valid_loss.append(float(stats.split(' ')[6].strip()))
 
     #train line
     xt = list(range(1, len(train_loss)+1, 1))
     yt = train_loss
-    plt.plot(xt, yt, label = "training loss")
     #validation line
     xv = xt
     yv = valid_loss
-    plt.plot(xv, yv, label = "validation loss")
+    fig, ax = plt.subplots()
+    ax.plot(xt, yt, label = "training loss")
+    ax.plot(xv, yv, label = "validation loss")
     #plot Hit @1 value
-    plt.text(0.5, 0.5, hit_at_1)
+    plt.text(0.3, 0.25, hit_at_1, transform = ax.transAxes)
     #plot batch size
-    plt.text(0.5, 0.5, 'Batch_size = ' + batch_size) #horizontalalignment='center', verticalalignment='center', transform = ax.transAxes
+    plt.text(0.3, 0.3,'Batch_size = ' + batch_size, transform = ax.transAxes) #horizontalalignment='center', verticalalignment='center', transform = ax.transAxes
     plt.xlabel('epochs')
     plt.ylabel('loss')
     plt.title(file)
