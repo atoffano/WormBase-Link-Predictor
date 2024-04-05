@@ -12,9 +12,11 @@ def figure(file):
     hit_at_1 = ''
     batch_size = ''
 
+    pattern = " - Epoch "
+
     with open(file, 'r') as f:
         for line in f:
-            if "ComplEx - Epoch" in line:
+            if pattern in line:
                 embedding_stats.append(line.strip())
             elif "Hit@1 :" in line:
                 hit_at_1 = line.split('INFO:')[-1]
@@ -40,7 +42,7 @@ def figure(file):
     #plot Hit @1 value
     plt.text(0.5, 0.5, hit_at_1)
     #plot batch size
-    plt.text(0.5, 10, 'Batch_size = ' + batch_size)
+    plt.text(0.5, 0.5, 'Batch_size = ' + batch_size) #horizontalalignment='center', verticalalignment='center', transform = ax.transAxes
     plt.xlabel('epochs')
     plt.ylabel('loss')
     plt.title(file)
